@@ -47,3 +47,27 @@ echo -e "${GREEN}Pimcore Installed Successfully!${NC}\n"
 echo -e "${YELLOW}Setting Permissions...${NC}"
 chown -R www-data: .
 echo -e "${GREEN}Permissions Set Successfully!${NC}\n"
+
+echo -e "${YELLOW}Additional Setup (nano, cron)...${NC}"
+apt update &&
+apt install nano &&
+apt install cron
+echo -e "${GREEN}Additional Setup Successfully!${NC}\n"
+
+echo -e "${YELLOW}Setup Maintenance Cron Job...${NC}"
+
+echo "" >> /etc/crontab &&
+echo "# this command needs anyway executed via cron or similar task scheduler" >> /etc/crontab &&
+echo "# it fills the message queue with the necessary tasks, which are then processed by messenger:consume" >> /etc/crontab &&
+echo "*/5 * * * * /var/www/html/bin/console pimcore:maintenance --async" >> /etc/crontab &&
+echo "" >> /etc/crontab &&
+echo "# it's recommended to run the following command using a process control system like Supervisor" >> /etc/crontab &&
+echo "# please follow the Symfony Messenger guide for a best practice production setup:" >> /etc/crontab &&
+echo "# https://symfony.com/doc/current/messenger.html#deploying-to-production" >> /etc/crontab &&
+echo "*/5 * * * * /var/www/html/bin/console messenger:consume pimcore_core pimcore_maintenance --time-limit=300" >> /etc/crontab
+
+echo -e "${YELLOW}Run Maintenance Cron Jobs...${NC}"
+./bin/console pimcore:maintenance --async
+#./bin/console messenger:consume pimcore_core pimcore_maintenance --time-limit=300
+echo -e "${GREEN}Maintenance Cron Job Successfully!${NC}\n"
+
